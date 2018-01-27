@@ -1,5 +1,8 @@
 "use strict"
 
-module.exports = (context, callback) => {
-    callback(undefined, {status: "You said: " + JSON.stringify(context)});
+// return a promise or use an async function
+
+module.exports = async input => {
+  return { status: 'You said: ' + JSON.stringify(input) }
 }
+

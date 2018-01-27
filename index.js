@@ -3,40 +3,35 @@
 
 "use strict"
 
-const express = require('express')
-const app = express()
-const handler = require('./function/handler');
-const bodyParser = require('body-parser')
+const http = require('http')
+const handler = require('./function/handler')
 
-// app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(bodyParser.raw());
-app.use(bodyParser.text({ type : "text/*" }));
+const server = http.createServer((req, res) => {
+  const body = ''
+  req.on('data', chunk => {
+    body += chunk
+  })
 
-var middleware = (req, res) => {
-    handler(req.body, (err, functionResult) => {
-        if (err) {
-            return console.error(err);
-        }
-        if(isArray(functionResult) || isObject(functionResult)) {
-            res.send(JSON.stringify(functionResult));
-        } else {
-            res.send(functionResult);
-        }
-    });
-};
+  req.on('end', async () => {
+    let result = await handler(body).catch(console.error)
 
-app.post('/', middleware);
-app.get('/', middleware);
+    if (isObject(result) || isArray(result)) {
+      result = JSON.stringify(result)
+    }
 
-app.listen(3000, () => {
+    res.writeHead(200, { 'Content-Type': 'text/html' })
+    res.write(result)
+    res.end()
+  })
+}).listen(3000, () => {
     console.log('OpenFaaS Node.js listening on port: 3000')
-});
+})
 
-let isArray = (a) => {
-    return (!!a) && (a.constructor === Array);
-};
+function isArray(a) {
+    return Array.isArray(a)
+}
 
-let isObject = (a) => {
-    return (!!a) && (a.constructor === Object);
-};
+function isObject(a) {
+    return (!!a) && (a.constructor === Object)
+}
+
